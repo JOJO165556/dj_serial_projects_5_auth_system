@@ -2,7 +2,7 @@ from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from security.utils.token_blacklist import blacklist_token
+from apps.security.utils.token_blacklist import blacklist_token
 
 
 def login_user(email, password):
