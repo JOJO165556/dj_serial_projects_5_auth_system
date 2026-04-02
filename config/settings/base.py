@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'apps.common',
     'apps.roles',
     'apps.security',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
