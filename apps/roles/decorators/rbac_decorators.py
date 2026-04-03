@@ -12,6 +12,10 @@ def permission_required(permission_code):
         @wraps(view_func)
         def wrapper(self, request, *args, **kwargs):
 
+            # Pour éviter le AnonymmousUser
+            if not request.user or not request.user.is_authenticated:
+                raise PermissionDenied("Authentication required")
+
             if not user_has_permission(request.user, permission_code):
                 raise PermissionDenied(f"Missing permission: {permission_code}")
 
