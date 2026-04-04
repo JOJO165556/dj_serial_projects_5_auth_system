@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.exceptions import AuthenticationFailed
 
 from apps.security.services.security_service import log_security_event, get_client_ip
 from apps.security.services.rate_limit_service import rate_limit
@@ -37,10 +38,18 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
 
         email = serializer.validated_data['email']
-        user, tokens = login_user(
-            email,
-            serializer.validated_data['password']
-        )
+        try:
+            user, tokens = login_user(
+                email,
+                serializer.validated_data['password']
+            )
+        except AuthenticationFailed:
+            log_security_event(
+                user=None,
+                action=f"FAILED_LOGIN: {email}",
+                ip=ip
+            )
+            raise  # On relance l'erreur pour garder le comportement normal de DRF
 
         log_security_event(
             user,
@@ -63,6 +72,8 @@ class LoginView(APIView):
     }
 )
 class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
 
