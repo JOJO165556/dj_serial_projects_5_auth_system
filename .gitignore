@@ -1,16 +1,35 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+
+# Environnements Virtuels
+venv/
+env/
+.env
+.venv/
+env.bak/
+venv.bak/
 
 # Django
 db.sqlite3
+db.sqlite3-journal
+media/
+static/
 
-# Environnements
-.env
+# Celery
+celerybeat-schedule
+celerybeat.pid
+*.pid
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Logs
+# Logs et OS
 *.log
+.DS_Store
+Thumbs.db

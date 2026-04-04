@@ -1,0 +1,60 @@
+services:
+  # L'application Django principale (l'API)
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app  # Synchronise en temps réel votre code et le conteneur !
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+
+  # Le serveur Redis (Base de données en mémoire pour Celery et Rate Limit)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data  # Garder les données redis même si on redémarre
+
+  # Le Worker Celery qui exécute les tâches (ex: email)
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_HOST=redis
+    depends_on:
+      - redis
+      - web
+
+  # Le panneau Flower pour surveiller Celery
+  flower:
+    build: .
+    command: celery -A config flower
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery
+
+# Déclaration du volume persistant pour Redis
+volumes:
+  redis_data:
