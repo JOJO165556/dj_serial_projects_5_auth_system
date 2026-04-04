@@ -8,8 +8,22 @@ from apps.security.services.rate_limit_service import rate_limit
 from ..serializers.auth_serializer import LoginSerializer, RegisterSerializer
 from ..services.auth_service import login_user, logout_user
 from apps.common.utils.response import success_response, error_response
+from drf_spectacular.utils import extend_schema, inline_serializer
+from rest_framework import serializers
 
 
+@extend_schema(
+    request=LoginSerializer,
+    responses={
+        200: inline_serializer(
+            name='LoginResponse',
+            fields={
+                'access': serializers.CharField(),
+                'refresh': serializers.CharField()
+            }
+        )
+    }
+)
 class LoginView(APIView):
 
     def post(self, request):
@@ -36,6 +50,18 @@ class LoginView(APIView):
 
         return success_response(data=tokens)
 
+@extend_schema(
+    request=inline_serializer(
+        name='LogoutRequest',
+        fields={'refresh_token': serializers.CharField()}
+    ),
+    responses={
+        200: inline_serializer(
+            name='LogoutResponse',
+            fields={'message': serializers.CharField()}
+        )
+    }
+)
 class LogoutView(APIView):
     def post(self, request):
         refresh_token = request.data.get('refresh_token')
@@ -53,6 +79,15 @@ class LogoutView(APIView):
 
         return success_response(message="Logged out")
 
+@extend_schema(
+    request=RegisterSerializer,
+    responses={
+        201: inline_serializer(
+            name='RegisterResponse',
+            fields={'message': serializers.CharField()}
+        )
+    }
+)
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 

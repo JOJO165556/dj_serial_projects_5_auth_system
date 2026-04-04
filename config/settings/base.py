@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     'apps.roles',
     'apps.security',
     'rest_framework',
+    'drf_spectacular',
 ]
 
 MIDDLEWARE = [
@@ -49,7 +50,25 @@ AUTH_USER_MODEL = "accounts.User"
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    )
+    ),
+    "DEFAULT_SCHEMA_CLASS":
+        "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Backend API",
+    "DESCRIPTION": "RBAC + JWT + Security API",
+    "VERSION": "1.0.0",
+    "SECURITY": [{"BearerAuth": []}],
+    "COMPONENTS": {
+        "SECURITY_SCHEMES": {
+            "BearerAuth": {
+                "type": "http",
+                "schema": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    }
 }
 
 SIMPLE_JWT = {

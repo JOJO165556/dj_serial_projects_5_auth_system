@@ -1,36 +1,32 @@
-#Pour sécurité 2FA
+# OTP stocké dans Redis (TTL 5min) — pas de modèle en base
 import random
-from datetime import timedelta
-from django.utils import timezone
+from infrastructure.redis.redis_client import client
+from apps.security.tasks import send_email_task
 
-from apps.security.models.otp import OTP
-
-def generate_otp():
+def generate_otp() -> str:
     return str(random.randint(100000, 999999))
 
-def create_otp(user):
+
+def create_otp(user) -> str:
     code = generate_otp()
-    otp = OTP.objects.create(
-        user=user,
-        code=code,
-        expires_at=timezone.now() + timedelta(minutes=5)
-    )
-    return otp
+    key = f"otp:{user.id}"
+    client.set(key, code, ex=300)  # expire après 5 minutes
+    return code
 
-def verify_otp(user, code: str):
-    otp = OTP.objects.filter(
-        user=user,
-        code=code,
-        is_used=False
-    ).order_by("-created_at").first()
 
-    if not otp:
+def verify_otp(user, code: str) -> bool:
+    key = f"otp:{user.id}"
+    stored = client.get(key)
+
+    if not stored:
         return False
 
-    if timezone.now() > otp.expires_at:
-        return False
+    if str(stored) != str(code) and (isinstance(stored, bytes) and stored.decode() != code):
+        # Pour gérer au cas où c'est bytes ou str selon config redis
+        if isinstance(stored, bytes):
+            stored = stored.decode()
+        if str(stored) != str(code):
+            return False
 
-    otp.is_used = True
-    otp.save()
-
+    client.delete(key)  # usage unique, invalide après vérification
     return True
