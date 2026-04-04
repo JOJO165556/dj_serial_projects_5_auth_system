@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from apps.roles.services.role_service import assign_role
 from apps.roles.models.role import Role
-from security.services.security_service import log_security_event, get_client_ip
+from apps.security.services.security_service import log_security_event, get_client_ip
 
 
 class AssignRoleView(APIView):

@@ -5,4 +5,4 @@ from .models.security_log import SecurityLog
 class SecurityLogAdmin(admin.ModelAdmin):
     list_display = ("user", "action", "ip_address", "created_at")
     list_filter = ("action", "created_at")
-    search_fields = ("action")
+    search_fields = ("action",)

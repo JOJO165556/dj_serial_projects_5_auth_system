@@ -7,7 +7,6 @@ class RBACMiddleware:
 
     def __call__(self, request):
 
-        #Exemple: protéger /api/protected/
         if request.path.startswith("/api/protected/"):
             user = request.user
 
@@ -17,4 +16,4 @@ class RBACMiddleware:
             if not hasattr(user, "role") or not user.role:
                 return JsonResponse({"error": "No role assigned"}, status=403)
 
-            return self.get_response(request)
+        return self.get_response(request)

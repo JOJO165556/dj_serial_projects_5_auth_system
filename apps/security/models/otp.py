@@ -7,5 +7,9 @@ class OTP(models.Model):
         on_delete=models.CASCADE
     )
     code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
     is_used = models.BooleanField(default=False)
     expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"{self.user} - {self.code}"

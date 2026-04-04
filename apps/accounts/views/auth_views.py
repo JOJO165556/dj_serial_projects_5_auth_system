@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from apps.security.services.security_service import log_security_event, get_client_ip
+from apps.security.services.rate_limit_service import rate_limit
 from ..serializers.auth_serializer import LoginSerializer, RegisterSerializer
 from ..services.auth_service import login_user, logout_user
 from apps.common.utils.response import success_response, error_response
@@ -12,6 +13,12 @@ from apps.common.utils.response import success_response, error_response
 class LoginView(APIView):
 
     def post(self, request):
+        ip = get_client_ip(request)
+
+        # Rate limit, limiter les tentatives de login
+        rate_limit(f"login:{ip}", limit=5, window=60)
+        rate_limit(f"user:{request.data.get('email')}")
+
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -24,8 +31,9 @@ class LoginView(APIView):
         log_security_event(
             user,
             action="LOGIN",
-            ip=get_client_ip(request)
+            ip=ip
         )
+
         return success_response(data=tokens)
 
 class LogoutView(APIView):
@@ -49,6 +57,8 @@ class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
+        rate_limit(f"register:{get_client_ip(request)}", limit=3, window=300)
+
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
