@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
+from apps.security.services.security_service import log_security_event, get_client_ip
 from ..serializers.auth_serializer import LoginSerializer, RegisterSerializer
 from ..services.auth_service import login_user, logout_user
 from apps.common.utils.response import success_response, error_response
@@ -14,9 +15,16 @@ class LoginView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        tokens = login_user(
-            serializer.validated_data['email'],
+        email = serializer.validated_data['email']
+        user, tokens = login_user(
+            email,
             serializer.validated_data['password']
+        )
+
+        log_security_event(
+            user,
+            action="LOGIN",
+            ip=get_client_ip(request)
         )
         return success_response(data=tokens)
 
@@ -28,6 +36,12 @@ class LogoutView(APIView):
             return error_response("No token")
 
         logout_user(refresh_token)
+
+        log_security_event(
+            request.user,
+            "LOGOUT",
+            get_client_ip(request)
+        )
 
         return success_response(message="Logged out")
 

@@ -13,10 +13,12 @@ def login_user(email, password):
 
     refresh = RefreshToken.for_user(user)
 
-    return {
+    tokens = {
         "access": str(refresh.access_token),
-        "refresh":  str(refresh)
+        "refresh": str(refresh)
     }
+
+    return user, tokens
 
 def logout_user(refresh_token):
     blacklist_token(refresh_token)

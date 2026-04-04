@@ -3,6 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from apps.roles.services.role_service import assign_role
 from apps.roles.models.role import Role
+from security.services.security_service import log_security_event, get_client_ip
+
 
 class AssignRoleView(APIView):
     def post(self, request):
@@ -21,6 +23,12 @@ class AssignRoleView(APIView):
             raise NotFound("Role not found")
 
         assign_role(user, role)
+
+        log_security_event(
+            request.user,
+            f"ASSIGN ROLE {role.name}",
+            get_client_ip(request)
+        )
 
         return Response({
             "message": f"Role '{role.name}' assigned successfully"
